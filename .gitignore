@@ -1,4 +1,5 @@
 *.o
+src/libcsv_parser.a
 config
 config.log
 aclocal.m4
@@ -7,3 +8,5 @@ configure
 config.status
 Makefile.in
 Makefile
+.deps
+.dirstamp
