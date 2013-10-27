@@ -6,3 +6,25 @@ The parser itself does not use any internal buffers. Whenever field value is ava
 will be invoked with field data and CSV location (row and column).
 
 See ``examples`` for more information.
+
+Building
+--------
+
+Prerequisites:
+
+  * gcc
+  * libtool
+  * autoconf
+  * automake
+  * check (to build tests)
+
+To build and install:
+
+    $ sh autogen.sh
+    $ ./configure
+    $ make
+    $ make install
+  
+You can optionally build and run tests:
+
+    $ make test
