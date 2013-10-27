@@ -1,0 +1,7 @@
+language: c
+compiler:
+  - gcc
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq libtool autoconf check
+script: ./autogen.sh && ./configure && make && make test

@@ -1,4 +1,4 @@
-csv_parser
+csv_parser [![Build Status](https://travis-ci.org/tadasv/csv_parser.png?branch=master)](https://travis-ci.org/tadasv/csv_parser)
 ==========
 
 This library provides a CSV parser to be used in an event loop for processing large amounts of streaming data.
