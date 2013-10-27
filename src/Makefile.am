@@ -1,4 +1,5 @@
-noinst_LIBRARIES = libcsv_parser.a
+lib_LTLIBRARIES = libcsv_parser.la
+libcsv_parser_la_SOURCES = csv_parser.c \
+                           csv_parser.h
 
-libcsv_parser_a_SOURCES = csv_parser.c \
-                          csv_parser.h
+include_HEADERS = csv_parser.h

@@ -4,14 +4,11 @@ AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR(config)
 AM_INIT_AUTOMAKE(tar-ustar dist-zip foreign subdir-objects)
 
-AC_PROG_RANLIB
 # This lets us use PACKAGE_VERSION in Makefiles
 AC_SUBST(PACKAGE_VERSION)
 
-# Take a copy of original flags
-CHIMP_ORIG_CFLAGS="${CFLAGS:-none}"
-CHIMP_ORIG_CPPFLAGS="${CPPFLAGS:-none}"
-CHIMP_ORIG_CXXFLAGS="${CXXFLAGS:-none}"
+# Initialize libtool so we could build shared objects.
+LT_INIT
 
 # Checks for programs.
 AC_PROG_CC

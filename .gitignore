@@ -10,3 +10,4 @@ Makefile.in
 Makefile
 .deps
 .dirstamp
+libtool
