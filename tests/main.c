@@ -197,6 +197,7 @@ END_TEST
 
 int main(int argc, const char *argv[])
 {
+    int number_failed;
     Suite *s = suite_create("csv_parser");
     TCase *tc = tcase_create("parser");
     tcase_add_test(tc, test_parser_full);
@@ -209,7 +210,7 @@ int main(int argc, const char *argv[])
     print_results(expected_test_results, result_slots);
 
     srunner_run_all(sr, CK_VERBOSE);
+    number_failed = srunner_ntests_failed(sr);
     srunner_free(sr);
-
-    return 0;
+    return (number_failed == 0) ? 0 : -1;
 }
