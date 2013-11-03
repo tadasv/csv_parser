@@ -121,6 +121,43 @@ int field_cb(csv_parser_t *parser, const char *data, size_t length, int row, int
 }
 
 
+int field_error_cb(csv_parser_t *parser, const char *data, size_t length, int row, int col)
+{
+    return -1;
+}
+
+
+START_TEST(test_parser_error_state)
+{
+    csv_parser_t parser;
+    csv_parser_settings_t settings;
+    int i;
+    int nread;
+    const char *str = "a,v,b\n1,2";
+    int len = strlen(str);
+
+    csv_parser_state_t states_to_test[] = {
+        csvps_line_start,
+        csvps_field_start,
+        csvps_field_end,
+        csvps_line_end_begin,
+        csvps_line_end
+    };
+
+    settings.delimiter = ',';
+    settings.field_cb = field_error_cb;
+
+    for (i = 0; i < 5; i++) {
+        csv_parser_state_t state = states_to_test[i];
+        csv_parser_init(&parser);
+        parser.state = state;
+        nread = csv_parser_execute(&parser, &settings, str, len);
+        ck_assert(parser.state == csvps_error);
+    }
+}
+END_TEST
+
+
 START_TEST(test_parser_full)
 {
     csv_parser_t parser;
@@ -202,6 +239,7 @@ int main(int argc, const char *argv[])
     TCase *tc = tcase_create("parser");
     tcase_add_test(tc, test_parser_full);
     tcase_add_test(tc, test_parser_chunked);
+    tcase_add_test(tc, test_parser_error_state);
 
     suite_add_tcase(s, tc);
     SRunner *sr = srunner_create(s);

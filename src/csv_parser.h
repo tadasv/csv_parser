@@ -37,7 +37,8 @@ typedef enum csv_parser_state_t {
     csvps_field_value,
     csvps_field_end,
     csvps_line_end_begin,
-    csvps_line_end
+    csvps_line_end,
+    csvps_error,
 } csv_parser_state_t;
 
 
@@ -78,7 +79,9 @@ void csv_parser_init(csv_parser_t *parser);
 
 /**
  * Executes CSV parser on the given data. Returns number
- * of bytes read.
+ * of bytes read. User should always check if parser state
+ * is ``csvps_error``. Parser will get into the error state
+ * if field callback returns a non-zero value.
  */
 size_t csv_parser_execute(csv_parser_t *parser,
                           const csv_parser_settings_t *settings,

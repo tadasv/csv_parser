@@ -96,6 +96,7 @@ size_t csv_parser_execute(csv_parser_t *parser,
                                                    parser->row,
                                                    parser->col);
                             if (r) {
+                                parser->state = csvps_error;
                                 return parser->nread;
                             }
                         }
@@ -112,6 +113,7 @@ size_t csv_parser_execute(csv_parser_t *parser,
                                            parser->row,
                                            parser->col);
                     if (r) {
+                        parser->state = csvps_error;
                         return parser->nread;
                     }
                 }
@@ -129,6 +131,7 @@ size_t csv_parser_execute(csv_parser_t *parser,
                                            parser->row,
                                            parser->col);
                     if (r) {
+                        parser->state = csvps_error;
                         return parser->nread;
                     }
                 }
@@ -141,6 +144,9 @@ size_t csv_parser_execute(csv_parser_t *parser,
                 } else {
                     parser->state = csvps_line_start;
                 }
+                break;
+            case csvps_error:
+                return parser->nread;
                 break;
             default:
                 assert(0 && "invalid parser state");
