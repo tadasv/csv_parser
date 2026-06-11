@@ -91,6 +91,10 @@ int main(int argc, const char *argv[])
 
     close(fd);
 
+    if (parser.state == csvps_error) {
+      return 1;
+    }
+
     field = csv.head;
     while (field) {
         printf("row: %3d, col: %3d, data: %s\n", field->row, field->col, field->data);
