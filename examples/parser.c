@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include <csv_parser.h>
 
 
@@ -80,6 +81,7 @@ int main(int argc, const char *argv[])
     while ((nread = read(fd, buffer, sizeof(buffer))) > 0) {
         csv_parser_execute(&parser, &settings, buffer, nread);
     }
+    csv_parser_finish(&parser, &settings);
 
     close(fd);
 
