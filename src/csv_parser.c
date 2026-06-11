@@ -48,6 +48,7 @@ size_t csv_parser_execute(csv_parser_t *parser,
     const char *cursor = data;
     const char *field_value = NULL;
     const char *data_end = data + data_len;
+    int (*field_cb)(csv_parser_t *, const char *, size_t, int, int) = settings->field_cb;
     int r;
     parser->nread = 0;
 
@@ -81,45 +82,84 @@ size_t csv_parser_execute(csv_parser_t *parser,
                 }
                 break;
             case csvps_field_value:
+                if (field_value == NULL) {
+                    field_value = cursor;
+                }
+
+                {
+                    const char *start = cursor;
+                    char delim = settings->delimiter;
+                    while (cursor < data_end) {
+                        ch = *cursor;
+                        if (ch == delim || ch == '\r' || ch == '\n') {
+                            break;
+                        }
+                        cursor++;
+                    }
+                    parser->nread += (cursor - start);
+                }
+
+                if (cursor == data_end) {
+                    if (field_cb && field_value) {
+                        r = field_cb(parser,
+                                     field_value,
+                                     cursor - field_value,
+                                     parser->row,
+                                     parser->col);
+                        if (r) {
+                            parser->state = csvps_error;
+                            return parser->nread;
+                        }
+                    }
+                    break;
+                }
+
                 if (ch == settings->delimiter) {
                     parser->state = csvps_field_end;
                 } else if (ch == '\r' || ch == '\n') {
                     parser->state = csvps_line_end_begin;
-                } else {
-                    if (field_value == NULL) {
-                        field_value = cursor;
-                    }
-
-                    cursor++;
-                    if (cursor == data_end) {
-                        if (settings->field_cb && field_value) {
-                            r = settings->field_cb(parser,
-                                                   field_value,
-                                                   cursor - field_value,
-                                                   parser->row,
-                                                   parser->col);
-                            if (r) {
-                                parser->state = csvps_error;
-                                parser->nread++;
-                                return parser->nread;
-                            }
-                        }
-                    }
-                    parser->nread++;
                 }
                 break;
             case csvps_field_quoted_value:
                 if (field_value == NULL) {
                     field_value = cursor;
                 }
+
+                {
+                    const char *start = cursor;
+                    while (cursor < data_end) {
+                        if (*cursor == '"') {
+                            break;
+                        }
+                        cursor++;
+                    }
+                    parser->nread += (cursor - start);
+                }
+
+                if (cursor == data_end) {
+                    if (field_cb && field_value) {
+                        r = field_cb(parser,
+                                     field_value,
+                                     cursor - field_value,
+                                     parser->row,
+                                     parser->col);
+                        if (r) {
+                            parser->state = csvps_error;
+                            return parser->nread;
+                        }
+                    }
+                    break;
+                }
+
+                ch = *cursor;
                 if (ch == '"') {
                     parser->state = csvps_field_quoted_quote;
-                    if (settings->field_cb && field_value && (cursor >= field_value)) {
-                        r = settings->field_cb(parser,
-                                               field_value,
-                                               cursor - field_value,
-                                               parser->row,
-                                               parser->col);
+                    if (field_cb && field_value && (cursor >= field_value)) {
+                        r = field_cb(parser,
+                                     field_value,
+                                     cursor - field_value,
+                                     parser->row,
+                                     parser->col);
                         if (r) {
                             parser->state = csvps_error;
                             return parser->nread;
@@ -128,29 +168,12 @@ size_t csv_parser_execute(csv_parser_t *parser,
                     field_value = NULL;
                     cursor++;
                     parser->nread++;
-                } else {
-                    cursor++;
-                    if (cursor == data_end) {
-                        if (settings->field_cb && field_value) {
-                            r = settings->field_cb(parser,
-                                                   field_value,
-                                                   cursor - field_value,
-                                                   parser->row,
-                                                   parser->col);
-                            if (r) {
-                                parser->state = csvps_error;
-                                parser->nread++;
-                                return parser->nread;
-                            }
-                        }
-                    }
-                    parser->nread++;
                 }
                 break;
             case csvps_field_quoted_quote:
                 if (ch == '"') {
-                    if (settings->field_cb) {
-                        r = settings->field_cb(parser, cursor, 1, parser->row, parser->col);
+                    if (field_cb) {
+                        r = field_cb(parser, cursor, 1, parser->row, parser->col);
                         if (r) {
                             parser->state = csvps_error;
                             return parser->nread;
@@ -171,12 +194,12 @@ size_t csv_parser_execute(csv_parser_t *parser,
                 break;
             case csvps_field_end:
                 // callback
-                if (settings->field_cb && field_value) {
-                    r = settings->field_cb(parser,
-                                           field_value,
-                                           cursor - field_value,
-                                           parser->row,
-                                           parser->col);
+                if (field_cb && field_value) {
+                    r = field_cb(parser,
+                                 field_value,
+                                 cursor - field_value,
+                                 parser->row,
+                                 parser->col);
                     if (r) {
                         parser->state = csvps_error;
                         return parser->nread;
@@ -189,12 +212,12 @@ size_t csv_parser_execute(csv_parser_t *parser,
                 break;
             case csvps_line_end_begin:
                 // callback
-                if (settings->field_cb && field_value) {
-                    r = settings->field_cb(parser,
-                                           field_value,
-                                           cursor - field_value,
-                                           parser->row,
-                                           parser->col);
+                if (field_cb && field_value) {
+                    r = field_cb(parser,
+                                 field_value,
+                                 cursor - field_value,
+                                 parser->row,
+                                 parser->col);
                     if (r) {
                         parser->state = csvps_error;
                         return parser->nread;
