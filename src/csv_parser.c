@@ -70,8 +70,15 @@ size_t csv_parser_execute(csv_parser_t *parser,
                 break;
             case csvps_field_start:
                 parser->col += 1;
-                parser->state = csvps_field_value;
-                field_value = cursor;
+                if (ch == '"') {
+                    parser->state = csvps_field_quoted_value;
+                    cursor++;
+                    parser->nread++;
+                    field_value = cursor;
+                } else {
+                    parser->state = csvps_field_value;
+                    field_value = cursor;
+                }
                 break;
             case csvps_field_value:
                 if (ch == settings->delimiter) {
@@ -79,10 +86,6 @@ size_t csv_parser_execute(csv_parser_t *parser,
                 } else if (ch == '\r' || ch == '\n') {
                     parser->state = csvps_line_end_begin;
                 } else {
-                    // If we previously been in csvps_field_value state
-                    // and field_value is not set, set it right away.
-                    // This can happen when we execute parser multiple
-                    // times in the value state.
                     if (field_value == NULL) {
                         field_value = cursor;
                     }
@@ -97,11 +100,73 @@ size_t csv_parser_execute(csv_parser_t *parser,
                                                    parser->col);
                             if (r) {
                                 parser->state = csvps_error;
+                                parser->nread++;
                                 return parser->nread;
                             }
                         }
                     }
                     parser->nread++;
+                }
+                break;
+            case csvps_field_quoted_value:
+                if (field_value == NULL) {
+                    field_value = cursor;
+                }
+                if (ch == '"') {
+                    parser->state = csvps_field_quoted_quote;
+                    if (settings->field_cb && field_value && (cursor >= field_value)) {
+                        r = settings->field_cb(parser,
+                                               field_value,
+                                               cursor - field_value,
+                                               parser->row,
+                                               parser->col);
+                        if (r) {
+                            parser->state = csvps_error;
+                            return parser->nread;
+                        }
+                    }
+                    field_value = NULL;
+                    cursor++;
+                    parser->nread++;
+                } else {
+                    cursor++;
+                    if (cursor == data_end) {
+                        if (settings->field_cb && field_value) {
+                            r = settings->field_cb(parser,
+                                                   field_value,
+                                                   cursor - field_value,
+                                                   parser->row,
+                                                   parser->col);
+                            if (r) {
+                                parser->state = csvps_error;
+                                parser->nread++;
+                                return parser->nread;
+                            }
+                        }
+                    }
+                    parser->nread++;
+                }
+                break;
+            case csvps_field_quoted_quote:
+                if (ch == '"') {
+                    if (settings->field_cb) {
+                        r = settings->field_cb(parser, cursor, 1, parser->row, parser->col);
+                        if (r) {
+                            parser->state = csvps_error;
+                            return parser->nread;
+                        }
+                    }
+                    parser->state = csvps_field_quoted_value;
+                    cursor++;
+                    parser->nread++;
+                    field_value = cursor;
+                } else if (ch == settings->delimiter) {
+                    parser->state = csvps_field_end;
+                } else if (ch == '\r' || ch == '\n') {
+                    parser->state = csvps_line_end_begin;
+                } else {
+                    parser->state = csvps_error;
+                    return parser->nread;
                 }
                 break;
             case csvps_field_end:
@@ -135,15 +200,20 @@ size_t csv_parser_execute(csv_parser_t *parser,
                         return parser->nread;
                     }
                 }
-                parser->state = csvps_line_end;
-                break;
-            case csvps_line_end:
-                if (ch == '\r' || ch == '\n') {
-                    cursor++;
-                    parser->nread++;
+                if (ch == '\r') {
+                    parser->state = csvps_line_end;
                 } else {
                     parser->state = csvps_line_start;
                 }
+                cursor++;
+                parser->nread++;
+                break;
+            case csvps_line_end:
+                if (ch == '\n') {
+                    cursor++;
+                    parser->nread++;
+                }
+                parser->state = csvps_line_start;
                 break;
             case csvps_error:
                 return parser->nread;
@@ -155,4 +225,22 @@ size_t csv_parser_execute(csv_parser_t *parser,
     }
 
     return parser->nread;
+}
+
+int csv_parser_finish(csv_parser_t *parser, const csv_parser_settings_t *settings)
+{
+    int r = 0;
+    if (parser->state == csvps_field_start) {
+        if (settings->field_cb) {
+            parser->col += 1;
+            r = settings->field_cb(parser, "", 0, parser->row, parser->col);
+            if (r) {
+                parser->state = csvps_error;
+            }
+        }
+    }
+    if (parser->state != csvps_error) {
+        parser->state = csvps_line_start;
+    }
+    return r;
 }

@@ -11,42 +11,81 @@ struct test_results {
 };
 
 
-// 5 items per row, 3 rows per test case: 15 * 6 slots
+// 5 items per row, 4 rows per test case: 20 slots
 static int expected_test_results[] = {
-    // ""
+    // 0: ""
     -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1,
-    // ", "
+    -1, -1, -1, -1, -1,
+    // 1: ", "
     0, 1, -1, -1, -1,
     -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1,
-    // ","
-    0, -1, -1, -1, -1,
     -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1,
-    // "\n"
-    -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1,
-    // "\r\n",
+    // 2: ","
+    0, 0, -1, -1, -1,
     -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1,
-    // "a,b,,c,"
-    1, 2, 0, 1, -1,
+    // 3: "\n"
     -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1,
-    // "a,b,,c, "
+    -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1,
+    // 4: "\r\n"
+    -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1,
+    // 5: "a,bb,,c,"
+    1, 2, 0, 1, 0,
+    -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1,
+    // 6: "a,bb,,c, "
     1, 2, 0, 1, 1,
     -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1,
-    // "a,b,\na,b,"
-    1, 2, 0, -1, -1,
-    1, 1, -1, -1, -1,
     -1, -1, -1, -1, -1,
-    // " bc "
+    // 7: "a,bb,\na,b,"
+    1, 2, 0, -1, -1,
+    1, 1, 0, -1, -1,
+    -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1,
+    // 8: " bc "
     4, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1,
+    // 9: "a\n\nb" (empty line in middle)
+    1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1,
+    1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1,
+    // 10: "\"a\"" (quotes)
+    1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1,
+    // 11: "\"a,b\"" (quotes with delimiter)
+    3, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1,
+    // 12: "\"a\nb\"" (quotes with newline)
+    3, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1,
+    // 13: "\"a\"\"b\"" (escaped quotes)
+    3, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1,
+    // 14: "\"\"" (empty quotes)
+    0, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1,
 };
@@ -66,6 +105,12 @@ static const char *test_data[] = {
     "a,bb,,c, ",
     "a,bb,\na,b,",
     " bc ",
+    "a\n\nb",
+    "\"a\"",
+    "\"a,b\"",
+    "\"a\nb\"",
+    "\"a\"\"b\"",
+    "\"\""
 };
 
 
@@ -73,12 +118,18 @@ static int test_data_end_states[] = {
     csvps_line_start,
     csvps_field_value,
     csvps_field_start,
-    csvps_line_end,
-    csvps_line_end,
+    csvps_line_start,
+    csvps_line_start,
     csvps_field_start,
     csvps_field_value,
     csvps_field_start,
     csvps_field_value,
+    csvps_field_value,
+    csvps_field_quoted_quote,
+    csvps_field_quoted_quote,
+    csvps_field_quoted_quote,
+    csvps_field_quoted_quote,
+    csvps_field_quoted_quote,
 };
 
 static int num_test_cases = sizeof(test_data)/(sizeof(char*));
@@ -110,7 +161,7 @@ void print_results(int *data, int len)
 int field_cb(csv_parser_t *parser, const char *data, size_t length, int row, int col)
 {
     struct test_results *results = parser->data;
-    int slot = results->test_case_number * 15 + row * 5 + col;
+    int slot = results->test_case_number * 20 + row * 5 + col;
 
     if (results->results[slot] == -1) {
         results->results[slot] = length;
@@ -182,6 +233,7 @@ START_TEST(test_parser_full)
         int nread = csv_parser_execute(&parser, &settings, str, len);
         ck_assert_int_eq(len, nread);
         ck_assert_int_eq(parser.state, test_data_end_states[i]);
+        csv_parser_finish(&parser, &settings);
     }
 
     printf("Test results:\n");
@@ -221,6 +273,7 @@ START_TEST(test_parser_chunked)
             ck_assert_int_eq(1, nread);
         }
         ck_assert_int_eq(parser.state, test_data_end_states[i]);
+        csv_parser_finish(&parser, &settings);
     }
 
     printf("Test results:\n");

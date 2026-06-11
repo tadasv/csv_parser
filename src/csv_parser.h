@@ -35,6 +35,8 @@ typedef enum csv_parser_state_t {
     csvps_line_start = 0,
     csvps_field_start,
     csvps_field_value,
+    csvps_field_quoted_value,
+    csvps_field_quoted_quote,
     csvps_field_end,
     csvps_line_end_begin,
     csvps_line_end,
@@ -48,7 +50,7 @@ typedef struct csv_parser_t {
     int row;
     /* csv column */
     int col;
-    uint32_t nread;
+    size_t nread;
     /* user data */
     void *data;
 } csv_parser_t;
@@ -88,6 +90,12 @@ size_t csv_parser_execute(csv_parser_t *parser,
                           const char *data,
                           size_t data_len);
 
+/**
+ * Flush any pending state. This is useful when the file ends
+ * without a trailing newline, to flush the final empty field.
+ * Returns 0 on success, anything else on error.
+ */
+int csv_parser_finish(csv_parser_t *parser, const csv_parser_settings_t *settings);
 
 #ifdef __cplusplus
 }
