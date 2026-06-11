@@ -80,8 +80,14 @@ int main(int argc, const char *argv[])
 
     while ((nread = read(fd, buffer, sizeof(buffer))) > 0) {
         csv_parser_execute(&parser, &settings, buffer, nread);
+        if (parser.state == csvps_error) {
+            fprintf(stderr, "Error: Malformed CSV data detected at row %d, col %d.\n", parser.row, parser.col);
+            break;
+        }
     }
-    csv_parser_finish(&parser, &settings);
+    if (parser.state != csvps_error) {
+        csv_parser_finish(&parser, &settings);
+    }
 
     close(fd);
 
