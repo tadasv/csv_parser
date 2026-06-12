@@ -72,7 +72,7 @@ See the `examples/` directory for more advanced use cases.
 
 The library is highly optimized for throughput, avoiding internal buffering and memory allocations while parsing. We include a benchmarking tool (`examples/bench`) and several test datasets to measure parsing performance.
 
-Recent benchmark results (run locally on an Apple Silicon machine):
+Recent benchmark results (run locally on an Apple M4 Pro machine):
 
 | Dataset | File Size | Description | Throughput |
 |---------|-----------|-------------|------------|
