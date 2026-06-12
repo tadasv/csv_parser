@@ -22,3 +22,7 @@ configure~
 examples/bench
 examples/parser
 tests/test
+
+examples/large.csv
+examples/wide.csv
+examples/quoted.csv

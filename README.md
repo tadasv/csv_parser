@@ -67,3 +67,21 @@ int main() {
 ```
 
 See the `examples/` directory for more advanced use cases.
+
+## Benchmarks
+
+The library is highly optimized for throughput, avoiding internal buffering and memory allocations while parsing. We include a benchmarking tool (`examples/bench`) and several test datasets to measure parsing performance.
+
+Recent benchmark results (run locally on an Apple Silicon machine):
+
+| Dataset | File Size | Description | Throughput |
+|---------|-----------|-------------|------------|
+| `iris.csv` | 4 KB | Small, standard dataset | ~440 MB/s |
+| `large.csv` | 7.6 MB | 100,000 rows, 10 columns (simple text/numbers) | ~1.3 GB/s |
+| `wide.csv` | 6.6 MB | 1,000 rows, 1,000 columns | ~1.3 GB/s |
+| `quoted.csv` | 23.8 MB | 100,000 rows, 10 columns with quoted strings & newlines | ~1.4 GB/s |
+
+You can run these benchmarks yourself using:
+```bash
+$ ./examples/bench examples/large.csv 100
+```
