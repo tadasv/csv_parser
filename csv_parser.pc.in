@@ -1,0 +1,10 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: @PACKAGE_NAME@
+Description: A simple CSV parser library
+Version: @PACKAGE_VERSION@
+Libs: -L${libdir} -lcsv_parser
+Cflags: -I${includedir}

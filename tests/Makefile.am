@@ -3,8 +3,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/src
 noinst_PROGRAMS = test
 
 test_LDFLAGS = -lcheck
-test_SOURCES = ../src/csv_parser.c \
-               ../src/csv_parser.h \
-               main.c
+test_SOURCES = main.c
+test_LDADD = $(top_builddir)/src/libcsv_parser.la
 
 TESTS = test

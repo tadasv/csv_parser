@@ -10,3 +10,6 @@ EXTRA_DIST = \
 
 test: all
 	cd tests ; $(MAKE) check
+
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = csv_parser.pc

@@ -11,3 +11,14 @@ Makefile
 .deps
 .dirstamp
 libtool
+
+*.pc
+configure~
+.libs/
+*.la
+*.lo
+*.log
+*.trs
+examples/bench
+examples/parser
+tests/test

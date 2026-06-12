@@ -13,5 +13,5 @@ LT_INIT
 # Checks for programs.
 AC_PROG_CC
 
-AC_CONFIG_FILES([Makefile src/Makefile tests/Makefile examples/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile tests/Makefile examples/Makefile csv_parser.pc])
 AC_OUTPUT
